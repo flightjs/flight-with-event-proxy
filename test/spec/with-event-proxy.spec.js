@@ -3,10 +3,10 @@
 describeMixin('lib/with-event-proxy', function () {
 
 	beforeEach(function () {
-		var targetDiv = $('<div><div class="div1"></div><div class="div2"></div></div>');
+		var targetDiv = $('<div><div class="div1"></div><input type="checkbox" /></div>');
 		setupComponent(targetDiv, {
 			div1Selector: '.div1',
-			div2Selector: '.div2'
+			checkboxSelector: 'input[type="checkbox"]'
 		});
 	});
 
@@ -180,8 +180,38 @@ describeMixin('lib/with-event-proxy', function () {
 		});
 	});
 
+	describe('source event default', function () {
+		it('does occur by default', function () {
+			expect(this.component.select('checkboxSelector')).not.toBeChecked();
+
+			this.component.proxy(this.component.select('checkboxSelector'), 'click', this.component.makeProxy(
+				this.component.eventTransform(function () {
+	               	return 'targetEvent';
+	            })
+	        ));
+
+	        this.component.trigger(this.component.select('checkboxSelector'), 'click');
+	        expect(this.component.select('checkboxSelector')).toBeChecked();
+		});
+		it('does not occur when opts.preventDefault is true', function () {
+			expect(this.component.select('checkboxSelector')).not.toBeChecked();
+
+			this.component.proxy(this.component.select('checkboxSelector'), 'click', this.component.makeProxy(
+				this.component.eventTransform(function () {
+	               	return 'targetEvent';
+	            }), {
+					preventDefault: true
+	            }
+	        ));
+
+	        this.component.trigger(this.component.select('checkboxSelector'), 'click');
+	        expect(this.component.select('checkboxSelector')).not.toBeChecked();
+		});
+
+	});
+
 	describe('source event propagation', function () {
-		it('does not occur by default', function () {
+		it('does occur by default', function () {
 			var spy = jasmine.createSpy();
 			this.component.on(document, 'sourceEvent', spy);
 
@@ -192,20 +222,22 @@ describeMixin('lib/with-event-proxy', function () {
 	        ));
 
 			this.component.trigger('sourceEvent');
-			expect(spy).not.toHaveBeenCalled();
+			expect(spy.calls.length).toBe(1);
 		});
-		it('occurs when last arg is true', function () {
+		it('does not occur when opts.stopPropagation is true', function () {
 			var spy = jasmine.createSpy();
 			this.component.on(document, 'sourceEvent', spy);
 
 			this.component.proxy('sourceEvent', this.component.makeProxy(
 				this.component.eventTransform(function () {
 	               	return 'targetEvent';
-	            }), true
+	            }), {
+					stopPropagation: true
+	            }
 	        ));
 
 			this.component.trigger('sourceEvent');
-			expect(spy.calls.length).toBe(1);
+			expect(spy).not.toHaveBeenCalled();
 		});
 	});
 
