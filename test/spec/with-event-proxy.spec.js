@@ -207,7 +207,6 @@ describeMixin('lib/with-event-proxy', function () {
             this.component.trigger(this.component.select('checkboxSelector'), 'click');
             expect(this.component.select('checkboxSelector')).not.toBeChecked();
         });
-
     });
 
     describe('source event propagation', function () {
@@ -265,6 +264,29 @@ describeMixin('lib/with-event-proxy', function () {
 
             this.component.unproxy('sourceEvent', 'targetEvent');
             this.component.trigger('sourceEvent');
+            expect(spy.calls.length).toBe(2);
+        });
+        it('can proxy with 1st arg node', function () {
+            var spy = jasmine.createSpy();
+            this.component.on(document, 'targetEvent', spy);
+
+            this.component.proxy(document, 'sourceEvent', 'targetEvent');
+            this.component.trigger(document, 'sourceEvent');
+            expect(spy.calls.length).toBe(1);
+        });
+        it('can unproxy with 1st arg node', function () {
+            var spy = jasmine.createSpy();
+            this.component.on(document, 'targetEvent', spy);
+
+            this.component.proxy(document, 'sourceEvent', 'targetEvent');
+            this.component.trigger(document, 'sourceEvent');
+            expect(spy.calls.length).toBe(1);
+
+            this.component.trigger(document, 'sourceEvent');
+            expect(spy.calls.length).toBe(2);
+
+            this.component.unproxy(document, 'sourceEvent', 'targetEvent');
+            this.component.trigger(document, 'sourceEvent');
             expect(spy.calls.length).toBe(2);
         });
     });
